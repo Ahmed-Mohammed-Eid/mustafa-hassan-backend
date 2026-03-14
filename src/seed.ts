@@ -81,6 +81,11 @@ const menuItemsByRestaurant = [
 ];
 
 export async function seedDatabase() {
+  // Initialize the global flag if not set
+  if (global.isSeeding === undefined) {
+    global.isSeeding = false;
+  }
+
   // Prevent multiple simultaneous seed calls
   if (global.isSeeding) {
     console.log('Seeding already in progress, skipping...');
@@ -91,9 +96,13 @@ export async function seedDatabase() {
   try {
     console.log('Starting database seeding...');
 
-    // Connect to MongoDB
-    await mongoose.connect(MONGO_URI, { dbName: 'unidash' });
-    console.log('Connected to MongoDB');
+    // Check if already connected to avoid duplicate connections
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(MONGO_URI, { dbName: 'unidash' });
+      console.log('Connected to MongoDB');
+    } else {
+      console.log('Already connected to MongoDB, using existing connection');
+    }
 
     // Create admin user if not exists
     const adminExists = await User.findOne({ email: adminUser.email });
@@ -203,8 +212,8 @@ export async function seedDatabase() {
     throw error;
   } finally {
     global.isSeeding = false;
-    await mongoose.disconnect();
-    console.log('Disconnected from MongoDB');
+    // Don't disconnect - let the main server manage the connection
+    console.log('Seed process finished, connection maintained for server');
   }
 }
 

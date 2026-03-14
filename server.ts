@@ -16,10 +16,12 @@ async function startServer() {
 
     // Run seed script only when not in test mode
     if (process.env.NODE_ENV !== 'test') {
+      console.log('Starting seed process...');
       await seedDatabase();
+      console.log('Seed process completed');
     }
 
-    // Start Express server
+    // Start Express server (moved AFTER seeding completes)
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });
