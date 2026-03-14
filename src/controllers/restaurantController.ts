@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Restaurant } from '../models/Restaurant';
 import { MenuItem } from '../models/MenuItem';
+import { uploadImageToS3 } from '../services/s3Service';
 
 export const getRestaurants = async (
   req: Request,
@@ -40,12 +41,21 @@ export const createRestaurant = async (
   next: NextFunction
 ) => {
   try {
-    const { name, description, image } = req.body;
+    const { name, description } = req.body;
+
+    // Handle image upload to S3
+    let imageUrl = '';
+    if (req.file) {
+      imageUrl = await uploadImageToS3(req.file);
+    } else {
+      res.status(400);
+      throw new Error('Image is required');
+    }
 
     const restaurant = new Restaurant({
       name,
       description,
-      image,
+      image: imageUrl,
       owner: req.user._id,
     });
 
@@ -75,7 +85,7 @@ export const createMenuItem = async (
   next: NextFunction
 ) => {
   try {
-    const { name, description, price, image, category } = req.body;
+    const { name, description, price, category } = req.body;
     const restaurantId = req.params.id;
 
     const restaurant = await Restaurant.findById(restaurantId);
@@ -90,11 +100,20 @@ export const createMenuItem = async (
       throw new Error('Not authorized to add items to this restaurant');
     }
 
+    // Handle image upload to S3
+    let imageUrl = '';
+    if (req.file) {
+      imageUrl = await uploadImageToS3(req.file);
+    } else {
+      res.status(400);
+      throw new Error('Image is required');
+    }
+
     const menuItem = new MenuItem({
       name,
       description,
       price,
-      image,
+      image: imageUrl,
       category,
       restaurant: restaurantId,
     });

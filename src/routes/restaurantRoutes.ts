@@ -12,11 +12,31 @@ import {
   createRestaurantSchema,
   createMenuItemSchema,
 } from '../schemas/restaurantSchemas';
+import { uploadImage } from '../middlewares/uploadMiddleware';
 
 const router = express.Router();
 
-router.route('/').get(getRestaurants).post(protect, admin, validate(createRestaurantSchema), createRestaurant);
+router
+  .route('/')
+  .get(getRestaurants)
+  .post(
+    protect,
+    admin,
+    uploadImage,
+    validate(createRestaurantSchema),
+    createRestaurant
+  );
+
 router.route('/:id').get(getRestaurantById);
-router.route('/:id/items').get(getMenuItems).post(protect, validate(createMenuItemSchema), createMenuItem);
+
+router
+  .route('/:id/items')
+  .get(getMenuItems)
+  .post(
+    protect,
+    uploadImage,
+    validate(createMenuItemSchema),
+    createMenuItem
+  );
 
 export default router;
