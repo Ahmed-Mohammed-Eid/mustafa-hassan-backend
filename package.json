@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon --exec bun run server.ts",
+    "start": "bun run server.ts",
     "test": "vitest"
   },
   "dependencies": {
