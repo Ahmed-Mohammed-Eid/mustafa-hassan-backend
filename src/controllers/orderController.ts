@@ -1,6 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 import { Order } from '../models/Order';
 
+const ORDER_STATUSES = [
+  'Pending',
+  'Accepted',
+  'Ready',
+  'Delivered',
+  'Cancelled',
+] as const;
+
+type OrderStatus = (typeof ORDER_STATUSES)[number];
+
 export const addOrderItems = async (
   req: Request,
   res: Response,
@@ -50,6 +60,44 @@ export const getMyOrders = async (
       'restaurant',
       'name image'
     );
+    res.json(orders);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getOrdersForAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { status } = req.query;
+    const filters: { status?: OrderStatus } = {};
+
+    if (status !== undefined) {
+      if (typeof status !== 'string') {
+        res.status(400);
+        throw new Error('Invalid status filter');
+      }
+
+      const normalizedStatus = ORDER_STATUSES.find(
+        (orderStatus) => orderStatus.toLowerCase() === status.toLowerCase()
+      );
+
+      if (!normalizedStatus) {
+        res.status(400);
+        throw new Error('Invalid order status');
+      }
+
+      filters.status = normalizedStatus;
+    }
+
+    const orders = await Order.find(filters)
+      .populate('user', 'name email')
+      .populate('restaurant', 'name image')
+      .sort({ createdAt: -1 });
+
     res.json(orders);
   } catch (error) {
     next(error);
