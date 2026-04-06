@@ -37,6 +37,7 @@ export const registerUser = async (
         name: user.name,
         email: user.email,
         role: user.role,
+        restaurant: user.restaurant,
         token: generateToken(user._id.toString()),
       });
     } else {
@@ -64,6 +65,7 @@ export const loginUser = async (
         name: user.name,
         email: user.email,
         role: user.role,
+        restaurant: user.restaurant,
         token: generateToken(user._id.toString()),
       });
     } else {
