@@ -100,3 +100,45 @@ export const getUserProfile = async (
     next(error);
   }
 };
+
+export const createAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { name, email, password, phone, universityId, restaurantId } = req.body;
+
+    const userExists = await User.findOne({ email });
+
+    if (userExists) {
+      res.status(400);
+      throw new Error('User already exists');
+    }
+
+    if (req.user.role !== 'admin') {
+      res.status(403);
+      throw new Error('Not authorized to create admins');
+    }
+
+    const user = await User.create({
+      name,
+      email,
+      password,
+      phone,
+      universityId,
+      role: 'admin',
+      restaurant: restaurantId || null,
+    });
+
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      restaurant: user.restaurant,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

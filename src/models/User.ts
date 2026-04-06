@@ -29,6 +29,10 @@ const userSchema = new mongoose.Schema(
       enum: ['student', 'admin', 'vendor'],
       default: 'student',
     },
+    restaurant: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Restaurant',
+    },
   },
   {
     timestamps: true,
