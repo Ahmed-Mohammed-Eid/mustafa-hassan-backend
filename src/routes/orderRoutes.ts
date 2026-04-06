@@ -4,6 +4,7 @@ import {
   getOrdersForAdmin,
   getOrderById,
   getMyOrders,
+  getRestaurantOrders,
 } from '../controllers/orderController';
 import { admin, protect } from '../middlewares/authMiddleware';
 import { validate } from '../middlewares/validateRequest';
@@ -13,6 +14,7 @@ const router = express.Router();
 
 router.route('/').post(protect, validate(createOrderSchema), addOrderItems).get(protect, getMyOrders);
 router.route('/admin').get(protect, admin, getOrdersForAdmin);
+router.route('/restaurant/:restaurantId').get(protect, getRestaurantOrders);
 router.route('/:id').get(protect, getOrderById);
 
 export default router;

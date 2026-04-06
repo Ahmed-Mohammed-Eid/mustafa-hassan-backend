@@ -131,3 +131,62 @@ export const getOrderById = async (
     next(error);
   }
 };
+
+export const getRestaurantOrders = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { restaurantId } = req.params;
+    const { status } = req.query;
+
+    const restaurant = await import('../models/Restaurant').then(m =>
+      m.Restaurant.findById(restaurantId)
+    );
+
+    if (!restaurant) {
+      res.status(404);
+      throw new Error('Restaurant not found');
+    }
+
+    if (
+      restaurant.owner.toString() !== req.user._id.toString() &&
+      req.user.role !== 'admin'
+    ) {
+      res.status(403);
+      throw new Error('Not authorized to view orders for this restaurant');
+    }
+
+    const filters: { restaurant: string; status?: OrderStatus } = {
+      restaurant: restaurantId,
+    };
+
+    if (status !== undefined) {
+      if (typeof status !== 'string') {
+        res.status(400);
+        throw new Error('Invalid status filter');
+      }
+
+      const normalizedStatus = ORDER_STATUSES.find(
+        (orderStatus) => orderStatus.toLowerCase() === status.toLowerCase()
+      );
+
+      if (!normalizedStatus) {
+        res.status(400);
+        throw new Error('Invalid order status');
+      }
+
+      filters.status = normalizedStatus;
+    }
+
+    const orders = await Order.find(filters)
+      .populate('user', 'name email')
+      .populate('restaurant', 'name image')
+      .sort({ createdAt: -1 });
+
+    res.json(orders);
+  } catch (error) {
+    next(error);
+  }
+};
